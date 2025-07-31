@@ -1,0 +1,97 @@
+#define TRIG_A 2
+#define ECHO_A 3
+#define TRIG_B 4
+#define ECHO_B 5
+#define TRIG_C 6
+#define ECHO_C 7
+#define SERVO_PIN 9
+#define RED_LED 10
+#define GREEN_LED 11
+#define BLUE_LED 12
+#define BUZZER 8
+
+#include <Servo.h>
+Servo lidServo;
+
+unsigned long lastLogTime = 0;
+int lidOpen = 0;
+unsigned long lidOpenTime = 0;
+
+long readUltrasonic(int trig, int echo) {
+  digitalWrite(trig, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trig, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trig, LOW);
+  long duration = pulseIn(echo, HIGH, 30000);
+  return duration * 0.034 / 2;
+}
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(TRIG_A, OUTPUT);
+  pinMode(ECHO_A, INPUT);
+  pinMode(TRIG_B, OUTPUT);
+  pinMode(ECHO_B, INPUT);
+  pinMode(TRIG_C, OUTPUT);
+  pinMode(ECHO_C, INPUT);
+  pinMode(RED_LED, OUTPUT);
+  pinMode(GREEN_LED, OUTPUT);
+  pinMode(BLUE_LED, OUTPUT);
+  pinMode(BUZZER, OUTPUT);
+  lidServo.attach(SERVO_PIN);
+  lidServo.write(0);
+}
+
+void loop() {
+  long distA = readUltrasonic(TRIG_A, ECHO_A);
+  long distB = readUltrasonic(TRIG_B, ECHO_B);
+  long distC = readUltrasonic(TRIG_C, ECHO_C);
+
+  if (distA < 30) {
+    lidServo.write(90);
+    lidOpen = 1;
+    lidOpenTime = millis();
+  }
+
+  if (lidOpen && millis() - lidOpenTime > 5000) {
+    lidServo.write(0);
+    lidOpen = 0;
+  }
+
+  String level = "empty";
+  if (distB < 20 && distC < 20) level = "full";
+  else if (distB < 20) level = "mid";
+
+  if (level == "full") {
+    digitalWrite(RED_LED, HIGH);
+    digitalWrite(GREEN_LED, LOW);
+    digitalWrite(BLUE_LED, LOW);
+    digitalWrite(BUZZER, HIGH);
+  } else if (level == "mid") {
+    digitalWrite(RED_LED, LOW);
+    digitalWrite(GREEN_LED, HIGH);
+    digitalWrite(BLUE_LED, LOW);
+    digitalWrite(BUZZER, LOW);
+  } else {
+    digitalWrite(RED_LED, LOW);
+    digitalWrite(GREEN_LED, LOW);
+    digitalWrite(BLUE_LED, HIGH);
+    digitalWrite(BUZZER, LOW);
+  }
+
+  if (millis() - lastLogTime > 5000) {
+    lastLogTime = millis();
+    Serial.print("{"time":");
+    Serial.print(millis());
+    Serial.print(","level":"");
+    Serial.print(level);
+    Serial.print("","sensorA":");
+    Serial.print(distA);
+    Serial.print(","sensorB":");
+    Serial.print(distB);
+    Serial.print(","sensorC":");
+    Serial.print(distC);
+    Serial.println(","status":"OK"}");
+  }
+}
