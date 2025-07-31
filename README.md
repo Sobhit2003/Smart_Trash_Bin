@@ -38,3 +38,7 @@ RGB LED
 Buzzer
 
 Breadboard & Resistors
+✅ Conclusion
+The system meets all functional goals and is optimized for future upgrades like IoT connectivity. It provides a smart, scalable solution for waste management in smart city applications.
+Simulation Link 
+https://www.tinkercad.com/things/5232fqeJkVJ-mighty-jofo 
